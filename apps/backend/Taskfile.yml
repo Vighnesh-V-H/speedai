@@ -1,7 +1,10 @@
 version: "3"
 
+dotenv:
+  - .env
+
 vars:
-  BOILERPLATE_DB_DSN: '{{.BOILERPLATE_DB_DSN | default ""}}'
+  SPEEDAI_DB_DSN: '{{.SPEEDAI_DB_DSN}}'
 
 tasks:
   help:
@@ -24,7 +27,7 @@ tasks:
       - go run ./cmd/speedai/main.go
 
   migrations:new:
-    desc: create a new database migration
+    desc: create a new Goose migration
     vars:
       NAME: '{{.name | default ""}}'
     cmds:
@@ -34,15 +37,20 @@ tasks:
           echo "Usage: task migrations:new name=migration_name"
           exit 1
         fi
-      - echo 'Creating migration file for {{.NAME}}...'
-      - tern new -m ./internal/database/migrations {{.NAME}}
+      - echo "Creating Goose migration file for {{.NAME}}..."
+      - goose -dir ./internal/database/migrations create {{.NAME}} sql
 
   migrations:up:
-    desc: apply all up database migrations
-    deps: [confirm]
+    desc: apply all up database migrations using Goose
     cmds:
-      - echo 'Running up migrations...'
-      - tern migrate -m ./internal/database/migrations --conn-string {{.BOILERPLATE_DB_DSN}}
+      - echo 'Running up migrations for speedai...'
+      - goose -dir ./internal/db/migrations postgres "{{.DATABASE_URL}}" up
+
+  migrations:down:
+    desc: roll back last migration using Goose
+    cmds:
+      - echo 'Rolling back last migration for speedai...'
+      - goose -dir ./internal/db/migrations postgres "{{.DATABASE_URL}}" down
 
   tidy:
     desc: format all .go files, and tidy and vendor module dependencies
