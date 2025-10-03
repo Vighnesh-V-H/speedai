@@ -25,7 +25,9 @@ tasks:
     desc: run the cmd/speedai application
     cmds:
       - go run ./cmd/speedai/main.go
-
+    watch:
+        true
+        
   migrations:new:
     desc: create a new Goose migration
     vars:
