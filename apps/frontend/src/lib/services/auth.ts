@@ -20,6 +20,12 @@ export interface ApiError {
   status: number;
 }
 
+export interface Session {
+  user: User | null;
+  isLoading: boolean;
+  isAuthenticated: boolean;
+}
+
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
 
 const api = axios.create({
@@ -47,13 +53,23 @@ const toApiError = (error: unknown): ApiError => {
   };
 };
 
-export const getCurrentUser = async (): Promise<User | null> => {
+const emptySession = (): Session => ({
+  user: null,
+  isLoading: false,
+  isAuthenticated: false,
+});
+
+export const getCurrentUser = async (): Promise<Session> => {
   try {
     const response = await api.get<AuthResponse>("/session");
-    return response.data.user;
+    return {
+      user: response.data.user,
+      isLoading: false,
+      isAuthenticated: true,
+    };
   } catch (error) {
     if (isAxiosError(error) && error.response?.status === 401) {
-      return null;
+      return emptySession();
     }
 
     throw toApiError(error);

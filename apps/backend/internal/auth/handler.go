@@ -1,7 +1,6 @@
 package auth
 
 import (
-	"fmt"
 	"net/http"
 	"os"
 	"time"
@@ -129,20 +128,40 @@ func (h *Handler) SignOut(c *gin.Context) {
 }
 
 func (h *Handler) GetSession(c *gin.Context) {
-	
-	sessionToken, err := c.Cookie("session_token")
-    fmt.Println(sessionToken  , "jojlesgooosd")
-	if err != nil {
-		
-		c.JSON(http.StatusUnauthorized, gin.H{
-			"error": "Session token not found",
-		})
-		return
-	}
+    sessionToken, err := c.Cookie("session_token")
+    if err != nil {
+        c.JSON(http.StatusUnauthorized, gin.H{"error": "Session token not found"})
+        return
+    }
 
+    ctx := c.Request.Context()
 
-	c.JSON(http.StatusOK, gin.H{
-		"message":       "good",
-		"session_token": sessionToken,
-	})
+    var id, name, email, image string
+
+    err = h.db.Pool.QueryRow(ctx, `
+        SELECT u.id, u.name, u.email, u.image
+        FROM users u
+        JOIN session s ON s.user_id = u.id
+        WHERE s.id = $1
+        LIMIT 1
+    `, sessionToken).Scan(&id, &name, &email, &image)
+
+    if err != nil {
+        if err.Error() == "no rows in result set" {
+            c.JSON(http.StatusUnauthorized, gin.H{"error": "Session not found"})
+        } else {
+            c.JSON(http.StatusInternalServerError, gin.H{"error": "Query failed"})
+        }
+        return
+    }
+
+    c.JSON(http.StatusOK, gin.H{
+        "user": gin.H{
+            "id":    id,
+            "name":  name,
+            "email": email,
+            "image": image,
+        },
+    })
 }
+

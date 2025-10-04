@@ -2,8 +2,12 @@
 import { useAuth } from "@/hooks/useAuth";
 
 function Dashboard() {
-  const { user } = useAuth();
-  console.log(user);
+  const { loading } = useAuth();
+
+  if (loading) {
+    return <div>loadin..</div>;
+  }
+
   return <div>hie</div>;
 }
 

@@ -11,6 +11,7 @@ import {
   getCurrentUser,
   refreshSession as refreshSessionRequest,
   signOut as signOutRequest,
+  type Session,
   type User,
 } from "@/lib/services/auth";
 
@@ -40,8 +41,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
       setLoading(true);
       setError(null);
 
-      const userData = await getCurrentUser();
-      setUser(userData);
+      const session: Session = await getCurrentUser();
+      setUser(session.user);
     } catch (err: any) {
       setError(err.message || "Failed to check authentication");
       setUser(null);
@@ -89,6 +90,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const value: AuthContextType = {
     user,
     loading,
+
     error,
     signOut,
     refreshSession,
