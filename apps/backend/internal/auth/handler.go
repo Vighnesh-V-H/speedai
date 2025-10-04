@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"fmt"
 	"net/http"
 	"os"
 	"time"
@@ -127,6 +128,21 @@ func (h *Handler) SignOut(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "This is the SignOut handler"})
 }
 
-func (h *Handler) GetCurrentUser(c *gin.Context) {
-	c.JSON(http.StatusOK, gin.H{"message":"good"})
+func (h *Handler) GetSession(c *gin.Context) {
+	
+	sessionToken, err := c.Cookie("session_token")
+    fmt.Println(sessionToken  , "jojlesgooosd")
+	if err != nil {
+		
+		c.JSON(http.StatusUnauthorized, gin.H{
+			"error": "Session token not found",
+		})
+		return
+	}
+
+
+	c.JSON(http.StatusOK, gin.H{
+		"message":       "good",
+		"session_token": sessionToken,
+	})
 }

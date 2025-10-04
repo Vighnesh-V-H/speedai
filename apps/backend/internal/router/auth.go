@@ -11,6 +11,6 @@ func SetupAuthRoutes(router *gin.Engine, authHandler *auth.Handler) {
 		authGroup.GET("/signin/google", authHandler.GoogleLogin)
 		authGroup.GET("/google/callback", authHandler.GoogleCallback)
 		authGroup.POST("/signout", authHandler.SignOut)
-		authGroup.GET("/me", authHandler.GetCurrentUser)
+		authGroup.GET("/session", authHandler.GetSession)
 	}
 }

@@ -3,10 +3,13 @@ version: "3"
 dotenv:
   - .env
 
+
+
 vars:
   SPEEDAI_DB_DSN: '{{.SPEEDAI_DB_DSN}}'
 
 tasks:
+
   help:
     desc: print this help message
     cmds:
@@ -22,11 +25,10 @@ tasks:
     internal: true
 
   run:
-    desc: run the cmd/speedai application
+    desc: run the cmd/speedai application with Air live reload
     cmds:
-      - go run ./cmd/speedai/main.go
-    watch:
-        true
+      - air -c .air.toml
+    
         
   migrations:new:
     desc: create a new Goose migration
