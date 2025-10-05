@@ -5,9 +5,6 @@ export interface User {
   email: string;
   name: string;
   picture?: string;
-  provider: string;
-  createdAt: string;
-  updatedAt: string;
 }
 
 export interface AuthResponse {
@@ -25,6 +22,9 @@ export interface Session {
   isLoading: boolean;
   isAuthenticated: boolean;
 }
+
+const SESSION_CACHE_KEY = "session_cache";
+const SESSION_TTL = 60 * 60 * 1000;
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
 
@@ -53,23 +53,33 @@ const toApiError = (error: unknown): ApiError => {
   };
 };
 
-const emptySession = (): Session => ({
-  user: null,
-  isLoading: false,
-  isAuthenticated: false,
-});
-
-export const getCurrentUser = async (): Promise<Session> => {
+export const getCurrentUser = async (): Promise<User | null> => {
   try {
+    const cached = window.localStorage.getItem(SESSION_CACHE_KEY);
+    if (cached) {
+      const { user, timestamp } = JSON.parse(cached);
+      const age = Date.now() - timestamp;
+
+      if (age < SESSION_TTL) {
+        return user;
+      } else {
+        window.localStorage.removeItem(SESSION_CACHE_KEY);
+      }
+    }
+
     const response = await api.get<AuthResponse>("/session");
-    return {
-      user: response.data.user,
-      isLoading: false,
-      isAuthenticated: true,
-    };
+    const user = response.data.user;
+
+    localStorage.setItem(
+      SESSION_CACHE_KEY,
+      JSON.stringify({ user, timestamp: Date.now() })
+    );
+
+    return user;
   } catch (error) {
     if (isAxiosError(error) && error.response?.status === 401) {
-      return emptySession();
+      localStorage.removeItem(SESSION_CACHE_KEY);
+      return null;
     }
 
     throw toApiError(error);

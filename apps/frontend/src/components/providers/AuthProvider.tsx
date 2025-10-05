@@ -41,8 +41,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
       setLoading(true);
       setError(null);
 
-      const session: Session = await getCurrentUser();
-      setUser(session.user);
+      const user = await getCurrentUser();
+      setUser(user);
     } catch (err: any) {
       setError(err.message || "Failed to check authentication");
       setUser(null);
@@ -90,7 +90,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const value: AuthContextType = {
     user,
     loading,
-
     error,
     signOut,
     refreshSession,

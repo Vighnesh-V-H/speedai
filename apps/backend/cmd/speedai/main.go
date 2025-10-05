@@ -16,7 +16,7 @@ func main() {
     if err := godotenv.Load(); err != nil {
         log.Println("No .env file found")
     }
-
+  
     
     database, err := db.New(os.Getenv("DATABASE_URL"))
     if err != nil {

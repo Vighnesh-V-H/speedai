@@ -115,7 +115,19 @@ func (h *Handler) GoogleCallback(c *gin.Context) {
         return
     }
 
-    c.SetCookie("session_token", sessionID, int(30*24*time.Hour.Seconds()), "/", "", false, true)
+secure := os.Getenv("ENV") == "production" 
+    c.SetCookie("session_token", sessionID, int(30*24*time.Hour.Seconds()), "/", "", secure, true)
+    cookie := &http.Cookie{
+    Name:     "session_token",
+    Value:    sessionID,
+    Path:     "/",
+    MaxAge:   int(30*24*time.Hour.Seconds()),
+    Secure:   secure,
+    HttpOnly: true,
+    SameSite: http.SameSiteStrictMode,
+}
+    http.SetCookie(c.Writer, cookie)
+
     frontendURL := os.Getenv("FRONTEND_URL")
     if frontendURL == "" {
         frontendURL = "http://localhost:3000"
@@ -124,7 +136,21 @@ func (h *Handler) GoogleCallback(c *gin.Context) {
 }
 
 func (h *Handler) SignOut(c *gin.Context) {
-	c.JSON(http.StatusOK, gin.H{"message": "This is the SignOut handler"})
+    sessionToken, err := c.Cookie("session_token")
+    if err != nil {
+        c.JSON(http.StatusOK, gin.H{"message": "No active session"})
+        return
+    }
+
+    ctx := c.Request.Context()
+    _, err = h.db.Pool.Exec(ctx, "DELETE FROM session WHERE id = $1", sessionToken)
+    if err != nil {
+        c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to sign out"})
+        return
+    }
+
+    c.SetCookie("session_token", "", -1, "/", "", false, true) // Expire cookie
+    c.JSON(http.StatusOK, gin.H{"message": "Signed out successfully"})
 }
 
 func (h *Handler) GetSession(c *gin.Context) {
