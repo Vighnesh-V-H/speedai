@@ -9,8 +9,10 @@ import (
 
 	"github.com/Vighnesh-V-H/speedai/internal/db"
 	"github.com/Vighnesh-V-H/speedai/internal/kafka"
+	"github.com/Vighnesh-V-H/speedai/internal/logger"
 	"github.com/gin-gonic/gin"
 	"github.com/twmb/franz-go/pkg/kgo"
+	"go.uber.org/zap"
 	"google.golang.org/genai"
 )
 
@@ -23,11 +25,20 @@ type ResearchRequest struct {
 }
 
 func (h *Handler) ResearchAgent(c *gin.Context) {
+	logger.Info("ResearchAgent handler started", zap.String("remote_addr", c.ClientIP()))
+
 	var req ResearchRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
+		logger.Warn("Invalid request payload",
+			zap.Error(err),
+			zap.String("remote_addr", c.ClientIP()))
 		c.JSON(http.StatusBadRequest, gin.H{"success": false, "error": "Topic is required"})
 		return
 	}
+
+	logger.Info("Research request received",
+		zap.String("topic", req.Topic),
+		zap.String("remote_addr", c.ClientIP()))
 
 	prompt := fmt.Sprintf(`You are a highly skilled research assistant. Your purpose is to provide a clear, neutral, and well-structured summary of the following topic.
 1. Start with a concise, one-sentence definition or overview of the topic.
@@ -38,12 +49,26 @@ Maintain a formal and objective tone. Do not use slang, personal opinions, or sp
 TOPIC: "%s"`, req.Topic)
 
 	ctx := c.Request.Context()
+
+	logger.Debug("Initializing Gemini client")
 	client, err := genai.NewClient(ctx, nil)
 	if err != nil {
+		logger.Error("Failed to initialize Gemini client",
+			zap.Error(err),
+			zap.String("topic", req.Topic))
 		c.JSON(http.StatusInternalServerError, gin.H{"success": false, "error": "Failed to initialize Gemini client"})
 		return
 	}
-	
+	logger.Info("Gemini client initialized successfully", zap.String("model", "gemini-2.5-flash"))
+
+	logger.Debug("Initializing Kafka client")
+	kafkaClient := kafka.Init()
+	if kafkaClient == nil {
+		logger.Error("Failed to initialize Kafka client", zap.String("topic", req.Topic))
+		c.JSON(http.StatusInternalServerError, gin.H{"success": false, "error": "Failed to initialize Kafka client"})
+		return
+	}
+	logger.Info("Kafka client initialized successfully")
 
 	stream := client.Models.GenerateContentStream(ctx, "gemini-2.5-flash", genai.Text(prompt), nil)
 
@@ -57,18 +82,28 @@ TOPIC: "%s"`, req.Topic)
 
 	go func() {
 		defer close(events)
+		logger.Debug("Starting stream processing goroutine", zap.String("topic", req.Topic))
 
 		var encounteredError bool
+		chunkCount := 0
 
 		stream(func(resp *genai.GenerateContentResponse, err error) bool {
 			if ctx.Err() != nil {
 				encounteredError = true
+				logger.Error("Context error during streaming",
+					zap.Error(ctx.Err()),
+					zap.String("topic", req.Topic),
+					zap.Int("chunks_processed", chunkCount))
 				events <- streamEvent{err: ctx.Err(), done: true}
 				return false
 			}
 
 			if err != nil {
 				encounteredError = true
+				logger.Error("Streaming error from Gemini",
+					zap.Error(err),
+					zap.String("topic", req.Topic),
+					zap.Int("chunks_processed", chunkCount))
 				events <- streamEvent{err: err, done: true}
 				return false
 			}
@@ -87,20 +122,51 @@ TOPIC: "%s"`, req.Topic)
 
 			if builder.Len() > 0 {
 				chunk := builder.String()
-				events <- streamEvent{chunk: builder.String()}
-				outputBytes, _ := json.Marshal(map[string]string{"topic": req.Topic, "chunk": chunk})
+				chunkCount++
+
+				logger.Debug("Received content chunk",
+					zap.String("topic", req.Topic),
+					zap.Int("chunk_number", chunkCount),
+					zap.Int("chunk_size", len(chunk)))
+
+				events <- streamEvent{chunk: chunk}
+
+				// Produce to Kafka
+				outputBytes, err := json.Marshal(map[string]string{"topic": req.Topic, "chunk": chunk})
+				if err != nil {
+					logger.Error("Failed to marshal Kafka message",
+						zap.Error(err),
+						zap.String("topic", req.Topic),
+						zap.Int("chunk_number", chunkCount))
+					return true
+				}
+
 				record := &kgo.Record{Topic: "research-facts", Value: outputBytes}
-				kafkaClient := kafka.Init()
-				kafkaClient.Produce(ctx, record, func(r *kgo.Record, err error) { 
-        				if err != nil { }
-   				 })
+				kafkaClient.Produce(ctx, record, func(r *kgo.Record, err error) {
+					if err != nil {
+						logger.Error("Failed to produce message to Kafka",
+							zap.Error(err),
+							zap.String("kafka_topic", "research-facts"),
+							zap.String("research_topic", req.Topic),
+							zap.Int("chunk_number", chunkCount))
+					} else {
+						logger.Debug("Message produced to Kafka successfully",
+							zap.String("kafka_topic", "research-facts"),
+							zap.String("research_topic", req.Topic),
+							zap.Int("chunk_number", chunkCount),
+							zap.Int64("offset", r.Offset),
+							zap.Int32("partition", r.Partition))
+					}
+				})
 			}
 
-		
 			return true
 		})
 
 		if !encounteredError {
+			logger.Info("Stream processing completed successfully",
+				zap.String("topic", req.Topic),
+				zap.Int("total_chunks", chunkCount))
 			events <- streamEvent{done: true}
 		}
 	}()
@@ -110,10 +176,16 @@ TOPIC: "%s"`, req.Topic)
 	c.Writer.Header().Set("Connection", "keep-alive")
 	c.Status(http.StatusOK)
 
+	logger.Debug("Starting SSE stream to client", zap.String("topic", req.Topic))
+
 	done := false
+	eventsSent := 0
 
 	c.Stream(func(w io.Writer) bool {
 		if done {
+			logger.Info("SSE stream completed",
+				zap.String("topic", req.Topic),
+				zap.Int("events_sent", eventsSent))
 			return false
 		}
 
@@ -121,22 +193,31 @@ TOPIC: "%s"`, req.Topic)
 		case event, ok := <-events:
 			if !ok {
 				done = true
+				logger.Warn("Events channel closed unexpectedly", zap.String("topic", req.Topic))
 				return false
 			}
 
 			if event.err != nil {
 				done = true
+				logger.Error("Error event received",
+					zap.Error(event.err),
+					zap.String("topic", req.Topic),
+					zap.Int("events_sent", eventsSent))
 				c.SSEvent("error", gin.H{"message": event.err.Error()})
 				return false
 			}
 
 			if event.done {
 				done = true
+				logger.Info("Done event received",
+					zap.String("topic", req.Topic),
+					zap.Int("events_sent", eventsSent))
 				c.SSEvent("done", gin.H{"success": true})
 				return false
 			}
 
 			if event.chunk != "" {
+				eventsSent++
 				c.SSEvent("message", gin.H{"text": event.chunk})
 				return true
 			}
@@ -144,12 +225,18 @@ TOPIC: "%s"`, req.Topic)
 			return false
 		case <-ctx.Done():
 			done = true
+			logger.Warn("Client disconnected",
+				zap.Error(ctx.Err()),
+				zap.String("topic", req.Topic),
+				zap.Int("events_sent", eventsSent))
 			c.SSEvent("error", gin.H{"message": ctx.Err().Error()})
 			return false
 		}
 	})
 }
 
-func (h *Handler) RecommendAgent(c *gin.Context){
-
+func (h *Handler) RecommendAgent(c *gin.Context) {
+	logger.Info("RecommendAgent handler called", zap.String("remote_addr", c.ClientIP()))
+	// TODO: Implement recommendation logic
+	c.JSON(http.StatusNotImplemented, gin.H{"success": false, "error": "Not implemented yet"})
 }
