@@ -1,13 +1,16 @@
 package agents
 
 import (
+	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
 	"strings"
 
 	"github.com/Vighnesh-V-H/speedai/internal/db"
+	"github.com/Vighnesh-V-H/speedai/internal/kafka"
 	"github.com/gin-gonic/gin"
+	"github.com/twmb/franz-go/pkg/kgo"
 	"google.golang.org/genai"
 )
 
@@ -83,9 +86,17 @@ TOPIC: "%s"`, req.Topic)
 			}
 
 			if builder.Len() > 0 {
+				chunk := builder.String()
 				events <- streamEvent{chunk: builder.String()}
+				outputBytes, _ := json.Marshal(map[string]string{"topic": req.Topic, "chunk": chunk})
+				record := &kgo.Record{Topic: "research-facts", Value: outputBytes}
+				kafkaClient := kafka.Init()
+				kafkaClient.Produce(ctx, record, func(r *kgo.Record, err error) { 
+        				if err != nil { }
+   				 })
 			}
 
+		
 			return true
 		})
 
