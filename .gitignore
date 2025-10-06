@@ -40,3 +40,4 @@ yarn-error.log*
 # Backend build artifacts
 apps/backend/tmp/
 
+todo.md
