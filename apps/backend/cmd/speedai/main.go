@@ -4,6 +4,7 @@ import (
 	"log"
 	"os"
 
+	"github.com/Vighnesh-V-H/speedai/internal/agents"
 	"github.com/Vighnesh-V-H/speedai/internal/auth"
 	"github.com/Vighnesh-V-H/speedai/internal/db"
 	"github.com/Vighnesh-V-H/speedai/internal/router"
@@ -26,7 +27,9 @@ func main() {
 
   
     authService := auth.NewService(database)
+    agentService := agents.NewService(database)
     authHandler := auth.NewHandler(authService)
+    agentHandler := agents.NewHandler(agentService)
 
   
     auth.SetupGoth()
@@ -35,6 +38,7 @@ func main() {
     
    
     router.SetupAuthRoutes(srv.Router, authHandler)
+    router.SetupAgentRoutes(srv.Router, agentHandler)
 
     port := os.Getenv("PORT")
     if port == "" {
