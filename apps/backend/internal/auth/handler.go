@@ -40,8 +40,9 @@ func (h *Handler) GoogleCallback(c *gin.Context) {
     if err != nil {
         logger.Error("Failed to complete user authentication",
             zap.Error(err),
+            zap.String("error-code", "101"),
             zap.String("remote_addr", c.ClientIP()))
-        c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+        c.JSON(http.StatusInternalServerError, gin.H{"error": "Authentication failed", "error-code": 101})
         return
     }
 
@@ -53,8 +54,8 @@ func (h *Handler) GoogleCallback(c *gin.Context) {
 
     tx, err := h.db.Pool.Begin(ctx)
     if err != nil {
-        logger.Error("Failed to begin database transaction", zap.Error(err))
-        c.JSON(http.StatusInternalServerError, gin.H{"error": "Database error"})
+        logger.Error("Failed to begin database transaction", zap.Error(err), zap.String("error-code", "102"))
+        c.JSON(http.StatusInternalServerError, gin.H{"error": "Database error", "error-code": 102})
         return
     }
     defer tx.Rollback(ctx)
@@ -78,8 +79,9 @@ func (h *Handler) GoogleCallback(c *gin.Context) {
         if err != nil {
             logger.Error("Failed to create user in database",
                 zap.Error(err),
+                zap.String("error-code", "103"),
                 zap.String("email", gothUser.Email))
-            c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create user"})
+            c.JSON(http.StatusInternalServerError, gin.H{"error": "User creation failed", "error-code": 103})
             return
         }
         logger.Info("User created successfully", zap.String("user_id", userID))
@@ -95,8 +97,9 @@ func (h *Handler) GoogleCallback(c *gin.Context) {
         if err != nil {
             logger.Error("Failed to update user in database",
                 zap.Error(err),
+                zap.String("error-code", "104"),
                 zap.String("user_id", userID))
-            c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update user"})
+            c.JSON(http.StatusInternalServerError, gin.H{"error": "User update failed", "error-code": 104})
             return
         }
         logger.Info("User updated successfully", zap.String("user_id", userID))
@@ -121,16 +124,17 @@ func (h *Handler) GoogleCallback(c *gin.Context) {
     if err != nil {
         logger.Error("Failed to save account information",
             zap.Error(err),
+            zap.String("error-code", "105"),
             zap.String("user_id", userID))
-        c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to save account"})
+        c.JSON(http.StatusInternalServerError, gin.H{"error": "Account save failed", "error-code": 105})
         return
     }
     logger.Debug("Account information saved successfully")
 
     sessionID, err := GenerateSecureToken(32) 
     if err != nil {
-        logger.Error("Failed to generate session token", zap.Error(err))
-        c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate session"})
+        logger.Error("Failed to generate session token", zap.Error(err), zap.String("error-code", "106"))
+        c.JSON(http.StatusInternalServerError, gin.H{"error": "Session token generation failed", "error-code": 106})
         return
     }
 
@@ -143,15 +147,16 @@ func (h *Handler) GoogleCallback(c *gin.Context) {
     if err != nil {
         logger.Error("Failed to create session",
             zap.Error(err),
+            zap.String("error-code", "107"),
             zap.String("user_id", userID))
-        c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create session"})
+        c.JSON(http.StatusInternalServerError, gin.H{"error": "Session creation failed", "error-code": 107})
         return
     }
 
     logger.Debug("Committing transaction")
     if err := tx.Commit(ctx); err != nil {
-        logger.Error("Failed to commit transaction", zap.Error(err))
-        c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to commit transaction"})
+        logger.Error("Failed to commit transaction", zap.Error(err), zap.String("error-code", "108"))
+        c.JSON(http.StatusInternalServerError, gin.H{"error": "Transaction commit failed", "error-code": 108})
         return
     }
     logger.Info("Session created successfully",
@@ -193,8 +198,9 @@ func (h *Handler) SignOut(c *gin.Context) {
     if err != nil {
         logger.Error("Failed to delete session from database",
             zap.Error(err),
+            zap.String("error-code", "109"),
             zap.String("session_id", sessionToken))
-        c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to sign out"})
+        c.JSON(http.StatusInternalServerError, gin.H{"error": "Session deletion failed", "error-code": 109})
         return
     }
 
@@ -232,8 +238,9 @@ func (h *Handler) GetSession(c *gin.Context) {
         } else {
             logger.Error("Failed to query user session",
                 zap.Error(err),
+                zap.String("error-code", "110"),
                 zap.String("session_id", sessionToken))
-            c.JSON(http.StatusInternalServerError, gin.H{"error": "Query failed"})
+            c.JSON(http.StatusInternalServerError, gin.H{"error": "Session query failed", "error-code": 110})
         }
         return
     }

@@ -18,13 +18,13 @@ func New(databaseURL string) (*DB, error) {
     
     pool, err := pgxpool.New(context.Background(), databaseURL)
     if err != nil {
-        logger.Error("Failed to create database pool", zap.Error(err))
+        logger.Error("Failed to create database pool", zap.Error(err), zap.String("error-code", "120"))
         return nil, fmt.Errorf("unable to connect to database: %w", err)
     }
 
     logger.Debug("Pinging database to verify connection")
     if err := pool.Ping(context.Background()); err != nil {
-        logger.Error("Failed to ping database", zap.Error(err))
+        logger.Error("Failed to ping database", zap.Error(err), zap.String("error-code", "121"))
         return nil, fmt.Errorf("unable to ping database: %w", err)
     }
 

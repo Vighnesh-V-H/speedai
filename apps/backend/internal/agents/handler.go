@@ -57,15 +57,16 @@ TOPIC: "%s"`, req.Topic)
 	if err != nil {
 		logger.Error("Failed to initialize Gemini client",
 			zap.Error(err),
+			zap.String("error-code", "111"),
 			zap.String("topic", req.Topic))
-		c.JSON(http.StatusInternalServerError, gin.H{"success": false, "error": "Failed to initialize Gemini client"})
+		c.JSON(http.StatusInternalServerError, gin.H{"success": false, "error": "Gemini client initialization failed", "error-code": 111})
 		return
 	}
 
 	kafkaClient := kafka.Init()
 	if kafkaClient == nil {
-		logger.Error("Failed to initialize Kafka client", zap.String("topic", req.Topic))
-		c.JSON(http.StatusInternalServerError, gin.H{"success": false, "error": "Failed to initialize Kafka client"})
+		logger.Error("Failed to initialize Kafka client", zap.String("error-code", "112"), zap.String("topic", req.Topic))
+		c.JSON(http.StatusInternalServerError, gin.H{"success": false, "error": "Kafka client initialization failed", "error-code": 112})
 		return
 	}
 
@@ -142,6 +143,7 @@ TOPIC: "%s"`, req.Topic)
 				if err != nil {
 					logger.Error("Failed to marshal Kafka message",
 						zap.Error(err),
+						zap.String("error-code", "113"),
 						zap.String("topic", req.Topic),
 						zap.Int("chunk_number", chunkCount))
 					return true
@@ -161,6 +163,7 @@ TOPIC: "%s"`, req.Topic)
 						} else {
 							logger.Error("Failed to produce message to Kafka",
 								zap.Error(err),
+								zap.String("error-code", "114"),
 								zap.String("kafka_topic", "research-facts"),
 								zap.String("research_topic", req.Topic),
 								zap.Int("chunk_number", chunkCount))
@@ -184,6 +187,7 @@ TOPIC: "%s"`, req.Topic)
 			if err := kafkaClient.Flush(kafkaCtx); err != nil {
 				logger.Error("Failed to flush Kafka client",
 					zap.Error(err),
+					zap.String("error-code", "115"),
 					zap.String("topic", req.Topic))
 			} else {
 				logger.Debug("Kafka client flushed successfully", zap.String("topic", req.Topic))
@@ -259,6 +263,7 @@ TOPIC: "%s"`, req.Topic)
 
 func (h *Handler) RecommendAgent(c *gin.Context) {
 	logger.Info("RecommendAgent handler called", zap.String("remote_addr", c.ClientIP()))
+
 	
 	c.JSON(http.StatusNotImplemented, gin.H{"success": false, "error": "Not implemented yet"})
 }

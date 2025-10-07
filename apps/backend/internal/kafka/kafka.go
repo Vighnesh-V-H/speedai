@@ -36,6 +36,7 @@ func Init() *kgo.Client {
 	if err != nil {
 		logger.Fatal("Failed to create Kafka client",
 			zap.Error(err),
+			zap.String("error-code", "122"),
 			zap.String("brokers", brokers))
 		return nil
 	}
@@ -47,6 +48,7 @@ func Init() *kgo.Client {
 	if err := client.Ping(ctx); err != nil {
 		logger.Error("Failed to ping Kafka broker - connection test failed",
 			zap.Error(err),
+			zap.String("error-code", "123"),
 			zap.String("brokers", brokers))
 		logger.Warn("Kafka client created but connection is unhealthy")
 	} else {

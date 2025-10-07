@@ -88,7 +88,7 @@ func (s *Server) Start(addr string) error {
     logger.Info("Starting HTTP server", zap.String("address", addr))
     err := s.server.ListenAndServe()
     if err != nil && err != http.ErrServerClosed {
-        logger.Error("Server failed to start", zap.Error(err))
+        logger.Error("Server failed to start", zap.Error(err), zap.String("error-code", "124"))
     }
     return err
 }
@@ -98,7 +98,7 @@ func (s *Server) Shutdown(ctx context.Context) error {
     
     err := s.server.Shutdown(ctx)
     if err != nil {
-        logger.Error("Error during server shutdown", zap.Error(err))
+        logger.Error("Error during server shutdown", zap.Error(err), zap.String("error-code", "125"))
     } else {
         logger.Info("Server shutdown completed successfully")
     }
