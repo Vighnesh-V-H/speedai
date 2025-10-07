@@ -66,7 +66,7 @@ func New(database *db.DB) *Server {
 
     return &Server{
         Router: router,
-        db:     database,
+        db:  database,
     }
 }
 
