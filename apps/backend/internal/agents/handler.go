@@ -1,11 +1,13 @@
 package agents
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/Vighnesh-V-H/speedai/internal/db"
 	"github.com/Vighnesh-V-H/speedai/internal/kafka"
@@ -59,16 +61,14 @@ TOPIC: "%s"`, req.Topic)
 		c.JSON(http.StatusInternalServerError, gin.H{"success": false, "error": "Failed to initialize Gemini client"})
 		return
 	}
-	logger.Info("Gemini client initialized successfully", zap.String("model", "gemini-2.5-flash"))
 
-	logger.Debug("Initializing Kafka client")
 	kafkaClient := kafka.Init()
 	if kafkaClient == nil {
 		logger.Error("Failed to initialize Kafka client", zap.String("topic", req.Topic))
 		c.JSON(http.StatusInternalServerError, gin.H{"success": false, "error": "Failed to initialize Kafka client"})
 		return
 	}
-	logger.Info("Kafka client initialized successfully")
+
 
 	stream := client.Models.GenerateContentStream(ctx, "gemini-2.5-flash", genai.Text(prompt), nil)
 
@@ -79,6 +79,10 @@ TOPIC: "%s"`, req.Topic)
 	}
 
 	events := make(chan streamEvent)
+
+ 
+	kafkaCtx, kafkaCancel := context.WithTimeout(context.Background(), 2*time.Minute)
+	defer kafkaCancel()
 
 	go func() {
 		defer close(events)
@@ -97,6 +101,8 @@ TOPIC: "%s"`, req.Topic)
 				events <- streamEvent{err: ctx.Err(), done: true}
 				return false
 			}
+
+			
 
 			if err != nil {
 				encounteredError = true
@@ -131,7 +137,7 @@ TOPIC: "%s"`, req.Topic)
 
 				events <- streamEvent{chunk: chunk}
 
-				// Produce to Kafka
+			
 				outputBytes, err := json.Marshal(map[string]string{"topic": req.Topic, "chunk": chunk})
 				if err != nil {
 					logger.Error("Failed to marshal Kafka message",
@@ -142,20 +148,26 @@ TOPIC: "%s"`, req.Topic)
 				}
 
 				record := &kgo.Record{Topic: "research-facts", Value: outputBytes}
-				kafkaClient.Produce(ctx, record, func(r *kgo.Record, err error) {
+				
+				kafkaClient.Produce(kafkaCtx, record, func(r *kgo.Record, err error) {
 					if err != nil {
-						logger.Error("Failed to produce message to Kafka",
-							zap.Error(err),
-							zap.String("kafka_topic", "research-facts"),
-							zap.String("research_topic", req.Topic),
-							zap.Int("chunk_number", chunkCount))
+						
+						if err == context.Canceled || err == context.DeadlineExceeded {
+							logger.Warn("Kafka produce cancelled or timed out",
+								zap.Error(err),
+								zap.String("kafka_topic", "research-facts"),
+								zap.String("research_topic", req.Topic),
+								zap.Int("chunk_number", chunkCount))
+						} else {
+							logger.Error("Failed to produce message to Kafka",
+								zap.Error(err),
+								zap.String("kafka_topic", "research-facts"),
+								zap.String("research_topic", req.Topic),
+								zap.Int("chunk_number", chunkCount))
+						}
 					} else {
 						logger.Debug("Message produced to Kafka successfully",
-							zap.String("kafka_topic", "research-facts"),
-							zap.String("research_topic", req.Topic),
-							zap.Int("chunk_number", chunkCount),
-							zap.Int64("offset", r.Offset),
-							zap.Int32("partition", r.Partition))
+							zap.String("kafka_topic", "research-facts"))
 					}
 				})
 			}
@@ -167,6 +179,16 @@ TOPIC: "%s"`, req.Topic)
 			logger.Info("Stream processing completed successfully",
 				zap.String("topic", req.Topic),
 				zap.Int("total_chunks", chunkCount))
+			
+			logger.Debug("Flushing Kafka client", zap.String("topic", req.Topic))
+			if err := kafkaClient.Flush(kafkaCtx); err != nil {
+				logger.Error("Failed to flush Kafka client",
+					zap.Error(err),
+					zap.String("topic", req.Topic))
+			} else {
+				logger.Debug("Kafka client flushed successfully", zap.String("topic", req.Topic))
+			}
+			
 			events <- streamEvent{done: true}
 		}
 	}()
@@ -237,6 +259,6 @@ TOPIC: "%s"`, req.Topic)
 
 func (h *Handler) RecommendAgent(c *gin.Context) {
 	logger.Info("RecommendAgent handler called", zap.String("remote_addr", c.ClientIP()))
-	// TODO: Implement recommendation logic
+	
 	c.JSON(http.StatusNotImplemented, gin.H{"success": false, "error": "Not implemented yet"})
 }
