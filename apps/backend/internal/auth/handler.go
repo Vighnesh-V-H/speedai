@@ -164,7 +164,6 @@ func (h *Handler) GoogleCallback(c *gin.Context) {
         zap.String("session_id", sessionID))
 
 secure := os.Getenv("ENV") == "production" 
-    c.SetCookie("session_token", sessionID, int(30*24*time.Hour.Seconds()), "/", "", secure, true)
     cookie := &http.Cookie{
     Name:     "session_token",
     Value:    sessionID,
@@ -172,7 +171,7 @@ secure := os.Getenv("ENV") == "production"
     MaxAge:   int(30*24*time.Hour.Seconds()),
     Secure:   secure,
     HttpOnly: true,
-    SameSite: http.SameSiteStrictMode,
+    SameSite: http.SameSiteLaxMode,
 }
     http.SetCookie(c.Writer, cookie)
 

@@ -88,7 +88,7 @@ export const getCurrentUser = async (): Promise<User | null> => {
 
 export const signIn = async (): Promise<void> => {
   try {
-    await api.post("/signin/google");
+    window.location.href = "http://localhost:8080/api/auth/signin/google";
   } catch (error) {
     throw toApiError(error);
   }
