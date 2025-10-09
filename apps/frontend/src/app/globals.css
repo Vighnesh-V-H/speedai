@@ -1,57 +1,50 @@
 @import "tailwindcss";
 
 :root {
-  --background: 222 65% 99%;
-  --foreground: 215 32% 14%;
+  --background: 0 0% 100%;
+  --foreground: 210 15% 8%;
   --card: 0 0% 100%;
-  --card-foreground: 215 32% 14%;
+  --card-foreground: 210 15% 8%;
   --popover: 0 0% 100%;
-  --popover-foreground: 215 32% 14%;
-  --primary: 198 90% 52%;
+  --popover-foreground: 210 15% 8%;
+  --primary: 215 18% 9%;
   --primary-foreground: 0 0% 100%;
-  --primary-hover: 198 90% 45%;
-  --secondary: 216 42% 95%;
-  --secondary-foreground: 215 32% 20%;
-  --muted: 222 32% 94%;
-  --muted-foreground: 215 16% 38%;
-  --accent: 260 62% 96%;
-  --accent-foreground: 258 44% 32%;
-  --destructive: 352 85% 58%;
-  --destructive-foreground: 0 0% 98%;
-  --border: 214 32% 90%;
-  --input: 214 32% 90%;
-  --ring: 198 90% 52%;
-  --radius: 0.75rem;
-}
-
-@theme inline {
-  --color-background: hsl(var(--background));
-  --color-foreground: hsl(var(--foreground));
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --primary-hover: 215 10% 20%;
+  --secondary: 210 16% 96%;
+  --secondary-foreground: 210 12% 26%;
+  --muted: 210 14% 94%;
+  --muted-foreground: 210 10% 48%;
+  --accent: 174 64% 42%;
+  --accent-foreground: 174 30% 12%;
+  --destructive: 0 72% 45%;
+  --destructive-foreground: 0 0% 100%;
+  --border: 210 16% 88%;
+  --input: 210 16% 88%;
+  --ring: 215 18% 9%;
+  --radius: 0.65rem;
 }
 
 .dark {
-  --background: 222 54% 5%;
-  --foreground: 210 24% 96%;
-  --card: 222 56% 7%;
-  --card-foreground: 210 24% 96%;
-  --popover: 222 56% 7%;
-  --popover-foreground: 210 24% 96%;
-  --primary: 192 92% 68%;
-  --primary-foreground: 210 24% 8%;
-  --primary-hover: 192 92% 62%;
-  --secondary: 220 30% 18%;
-  --secondary-foreground: 210 24% 96%;
-  --muted: 222 26% 16%;
-  --muted-foreground: 210 12% 70%;
-  --accent: 260 60% 22%;
-  --accent-foreground: 260 68% 90%;
-  --destructive: 349 89% 63%;
-  --destructive-foreground: 210 24% 4%;
-  --border: 220 28% 18%;
-  --input: 220 28% 18%;
-  --ring: 192 92% 68%;
+  --background: 215 23% 8%;
+  --foreground: 210 20% 94%;
+  --card: 215 23% 10%;
+  --card-foreground: 210 20% 94%;
+  --popover: 215 23% 10%;
+  --popover-foreground: 210 20% 94%;
+  --primary: 0 0% 98%;
+  --primary-foreground: 215 23% 8%;
+  --primary-hover: 0 0% 90%;
+  --secondary: 220 14% 18%;
+  --secondary-foreground: 210 20% 94%;
+  --muted: 220 12% 22%;
+  --muted-foreground: 210 14% 70%;
+  --accent: 174 64% 42%;
+  --accent-foreground: 215 23% 8%;
+  --destructive: 0 72% 55%;
+  --destructive-foreground: 210 20% 96%;
+  --border: 220 18% 24%;
+  --input: 220 18% 24%;
+  --ring: 0 0% 98%;
 }
 
 * {
@@ -62,39 +55,8 @@ body {
   background-color: hsl(var(--background));
   color: hsl(var(--foreground));
   font-feature-settings: "rlig" 1, "calt" 1;
-  background-image: radial-gradient(circle at 20% 20%, rgba(93, 216, 255, 0.25), transparent 55%),
-    radial-gradient(circle at 80% 0%, rgba(174, 138, 255, 0.22), transparent 45%),
-    radial-gradient(circle at 50% 90%, rgba(128, 216, 180, 0.18), transparent 50%);
-  background-attachment: fixed;
 }
 
-
-@keyframes blob {
-  0% {
-    transform: translate(0px, 0px) scale(1);
-  }
-  33% {
-    transform: translate(30px, -50px) scale(1.1);
-  }
-  66% {
-    transform: translate(-20px, 20px) scale(0.9);
-  }
-  100% {
-    transform: translate(0px, 0px) scale(1);
-  }
-}
-
-.animate-blob {
-  animation: blob 7s infinite;
-}
-
-.animation-delay-2000 {
-  animation-delay: 2s;
-}
-
-.animation-delay-4000 {
-  animation-delay: 4s;
-}
 
 @keyframes accordion-down {
   from {
@@ -132,23 +94,13 @@ html {
 }
 
 ::-webkit-scrollbar-track {
-  background-color: hsl(var(--muted));
-  border-radius: 9999px;
+  background-color: hsl(var(--secondary));
 }
 
 ::-webkit-scrollbar-thumb {
-  background: linear-gradient(
-    135deg,
-    hsla(var(--primary), 0.3),
-    hsla(var(--accent), 0.35)
-  );
-  border-radius: 9999px;
+  background-color: hsl(var(--primary));
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: linear-gradient(
-    135deg,
-    hsla(var(--primary), 0.45),
-    hsla(var(--accent), 0.45)
-  );
+  background-color: hsl(var(--primary-hover));
 }

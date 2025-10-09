@@ -33,4 +33,5 @@ var ErrorCodes = map[uint8]string{
 	128: "ristretto cache initialization failed",
 	129: "kafka consumer offset commit failed",
 	131: "event sending failed",
+	132: "ai model content generation failed",
 }

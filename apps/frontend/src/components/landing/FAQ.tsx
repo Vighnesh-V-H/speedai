@@ -10,18 +10,17 @@ import {
 
 export function FAQ() {
   return (
-    <section id='faq' className='relative py-28 px-4'>
-      <div className='absolute inset-0 -z-10 bg-gradient-to-b from-white/0 via-slate-100/60 dark:via-slate-900/60 to-white/0'></div>
-      <div className='max-w-4xl mx-auto'>
-        <div className='text-center mb-16 space-y-4'>
-          <h2 className='text-3xl md:text-5xl font-semibold text-gray-900 dark:text-white'>
+    <section id='faq' className='border-b border-[hsl(var(--border))] py-24'>
+      <div className='mx-auto max-w-4xl px-4'>
+        <div className='mb-14 space-y-4 text-center'>
+          <h2 className='text-3xl font-semibold text-[hsl(var(--primary))] md:text-4xl'>
             Frequently asked, quickly answered
           </h2>
-          <p className='text-lg text-gray-600 dark:text-gray-300'>
+          <p className='text-base text-[hsl(var(--muted-foreground))] md:text-lg'>
             Can't find what you're looking for?{" "}
             <a
               href='/contact'
-              className='text-sky-600 dark:text-sky-300 underline-offset-4 hover:underline'>
+              className='text-[hsl(var(--accent))] underline-offset-4 hover:underline'>
               Contact us
             </a>
           </p>
@@ -31,29 +30,29 @@ export function FAQ() {
           type='single'
           collapsible
           defaultValue={landingPageContent.faq[0]?.question}
-          className='space-y-4'>
+          className='space-y-3'>
           {landingPageContent.faq.map((item) => (
             <AccordionItem
               key={item.question}
               value={item.question}
-              className='overflow-hidden rounded-3xl border border-slate-200/70 dark:border-slate-800/60 bg-white/80 dark:bg-gray-950/70 backdrop-blur shadow-[0_20px_70px_rgba(15,23,42,0.12)] px-6 md:px-8'>
-              <AccordionTrigger className='py-6 text-lg font-semibold text-gray-900 dark:text-white'>
+              className='overflow-hidden rounded-3xl border border-[hsl(var(--border))] bg-white px-6 md:px-8'>
+              <AccordionTrigger className='py-6 text-left text-lg font-semibold text-[hsl(var(--foreground))]'>
                 {item.question}
               </AccordionTrigger>
-              <AccordionContent className='text-base text-gray-600 dark:text-gray-300'>
+              <AccordionContent className='pb-6 text-sm text-[hsl(var(--muted-foreground))] md:text-base'>
                 {item.answer}
               </AccordionContent>
             </AccordionItem>
           ))}
         </Accordion>
 
-        <div className='mt-16 text-center space-y-4'>
-          <p className='text-gray-600 dark:text-gray-400'>
+        <div className='mt-14 space-y-3 text-center'>
+          <p className='text-sm uppercase tracking-[0.3em] text-[hsl(var(--muted-foreground))]'>
             Still have questions?
           </p>
           <a
             href='/contact'
-            className='inline-flex items-center justify-center rounded-full bg-slate-900 px-8 py-3 text-sm font-semibold text-white hover:bg-slate-800 dark:bg-white dark:text-gray-900 dark:hover:bg-gray-100 transition'>
+            className='inline-flex items-center justify-center rounded-full border border-[hsl(var(--border))] bg-[hsl(var(--foreground))] px-8 py-3 text-sm font-medium text-[hsl(var(--background))] hover:bg-[hsl(var(--primary-hover))]'>
             Get in touch
           </a>
         </div>

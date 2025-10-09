@@ -9,6 +9,5 @@ func SetupAgentRoutes(router *gin.Engine, agentHandler *agents.Handler) {
 	authGroup := router.Group("/api/agents")
 	{
 		authGroup.POST("/research", agentHandler.ResearchAgent)
-		authGroup.POST("/recommed", agentHandler.RecommendAgent)
 	}
 }

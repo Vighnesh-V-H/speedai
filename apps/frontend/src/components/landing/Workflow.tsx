@@ -7,47 +7,45 @@ export function Workflow() {
   const { workflow } = landingPageContent;
 
   return (
-    <section id='workflow' className='relative py-28 px-4'>
-      <div className='absolute inset-0 -z-10 bg-gradient-to-b from-white/0 via-sky-50/80 dark:via-slate-900/70 to-white/0'></div>
-      <div className='max-w-7xl mx-auto flex flex-col gap-16'>
+    <section id='workflow' className='border-b border-[hsl(var(--border))] py-24'>
+      <div className='mx-auto flex max-w-6xl flex-col gap-16 px-4'>
         <div className='max-w-2xl space-y-5'>
-          <p className='inline-flex items-center gap-2 rounded-full border border-emerald-200/70 dark:border-emerald-500/40 bg-white/70 dark:bg-gray-900/60 px-4 py-1 text-xs font-medium uppercase tracking-[0.4em] text-emerald-500 dark:text-emerald-300'>
+          <p className='text-xs font-medium uppercase tracking-[0.45em] text-[hsl(var(--accent))]'>
             Workflow
           </p>
-          <h2 className='text-3xl md:text-5xl font-semibold text-gray-900 dark:text-white leading-[1.05]'>
+          <h2 className='text-3xl font-semibold text-[hsl(var(--primary))] md:text-4xl'>
             {workflow.title}
           </h2>
-          <p className='text-lg text-gray-600 dark:text-gray-300 leading-relaxed'>
+          <p className='text-base leading-relaxed text-[hsl(var(--muted-foreground))] md:text-lg'>
             {workflow.description}
           </p>
         </div>
 
-        <div className='grid gap-10 md:gap-12'>
+        <div className='grid gap-8 md:gap-10'>
           {workflow.steps.map((step, index) => (
             <div
               key={step.title}
-              style={{ transitionDelay: `${index * 60}ms` }}
-              className='relative grid md:grid-cols-[90px_1fr] md:items-start gap-6 md:gap-12 rounded-3xl border border-slate-200/80 dark:border-slate-800/60 bg-white/80 dark:bg-gray-950/70 p-6 md:p-8 shadow-[0_25px_80px_rgba(15,23,42,0.08)] backdrop-blur transition duration-500 ease-out hover:-translate-y-1 hover:shadow-[0_35px_80px_rgba(15,23,42,0.12)]'>
-              <div className='space-y-3'>
-                <span className='flex h-12 w-12 items-center justify-center rounded-2xl bg-sky-500/15 text-lg font-semibold text-sky-600 dark:text-sky-300'>
+              className='grid gap-6 rounded-3xl border border-[hsl(var(--border))] bg-white p-6 transition duration-300 hover:-translate-y-1 md:grid-cols-[72px_1fr] md:p-8'>
+              <div className='flex flex-col items-start gap-4'>
+                <span className='inline-flex h-12 w-12 items-center justify-center rounded-full border border-[hsl(var(--border))] text-sm font-medium tracking-[0.35em] text-[hsl(var(--accent))]'>
                   {(index + 1).toString().padStart(2, "0")}
                 </span>
-                <div className='hidden md:block h-full w-[2px] bg-gradient-to-b from-sky-400/30 via-cyan-400/20 to-emerald-300/30 mx-auto rounded-full'></div>
+                <div className='hidden h-full w-px bg-[hsl(var(--border))] md:block' />
               </div>
 
               <div className='space-y-4'>
                 <div className='flex flex-wrap items-center gap-3'>
-                  <h3 className='text-xl md:text-2xl font-semibold text-gray-900 dark:text-white'>
+                  <h3 className='text-xl font-semibold text-[hsl(var(--foreground))] md:text-2xl'>
                     {step.title}
                   </h3>
-                  <span className='inline-flex items-center rounded-full border border-slate-200/80 dark:border-slate-800/60 bg-slate-50/80 dark:bg-slate-900/60 px-3 py-1 text-xs font-medium uppercase tracking-[0.2em] text-slate-500 dark:text-slate-300'>
+                  <span className='rounded-full border border-[hsl(var(--border))] px-3 py-1 text-[10px] font-medium uppercase tracking-[0.3em] text-[hsl(var(--muted-foreground))]'>
                     {step.subtitle}
                   </span>
                 </div>
-                <p className='text-base text-gray-600 dark:text-gray-300 leading-relaxed'>
+                <p className='text-sm leading-relaxed text-[hsl(var(--muted-foreground))] md:text-base'>
                   {step.description}
                 </p>
-                <div className='flex items-center gap-2 text-sm font-semibold text-sky-600 dark:text-sky-300'>
+                <div className='flex items-center gap-2 text-sm font-medium text-[hsl(var(--accent))]'>
                   Continue
                   <ArrowRight className='h-4 w-4' />
                 </div>

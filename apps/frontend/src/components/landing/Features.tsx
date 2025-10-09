@@ -23,72 +23,55 @@ const iconMap = {
 
 export function Features() {
   return (
-    <section id='product' className='py-28 px-4'>
-      <div className='max-w-7xl mx-auto space-y-16'>
-        <div className='flex flex-col md:flex-row md:items-end md:justify-between gap-8'>
-          <div className='space-y-4 max-w-2xl'>
-            <p className='inline-flex items-center gap-2 rounded-full border border-sky-200/70 dark:border-sky-500/40 bg-white/70 dark:bg-gray-900/60 px-4 py-1 text-xs font-medium uppercase tracking-[0.4em] text-sky-500 dark:text-sky-300'>
+    <section id='product' className='border-b border-[hsl(var(--border))] py-24'>
+      <div className='mx-auto flex max-w-6xl flex-col gap-16 px-4'>
+        <div className='grid gap-10 md:grid-cols-[minmax(0,3fr)_minmax(0,2fr)] md:items-end'>
+          <div className='space-y-4'>
+            <p className='text-xs font-medium uppercase tracking-[0.45em] text-[hsl(var(--accent))]'>
               Product
             </p>
-            <h2 className='text-3xl md:text-5xl font-semibold text-gray-900 dark:text-white leading-[1.05]'>
+            <h2 className='text-3xl font-semibold text-[hsl(var(--primary))] md:text-4xl'>
               The writing assistant built for teams that live in research
             </h2>
-            <p className='text-lg text-gray-600 dark:text-gray-300 leading-relaxed'>
-              SpeedAI combines research automation, live suggestion streams, and
-              collaboration guardrails inside a single canvas that feels as
-              sleek as your favorite design tool.
+            <p className='text-base leading-relaxed text-[hsl(var(--muted-foreground))] md:text-lg'>
+              SpeedAI combines research automation, live suggestion streams, and collaboration guardrails inside a single canvas that feels as intentional as your best strategic memo.
             </p>
           </div>
-          <div className='grid gap-3 text-sm text-gray-600 dark:text-gray-300 md:text-right'>
-            <span className='font-semibold text-gray-900 dark:text-white'>
-              What you get:
-            </span>
+          <div className='grid gap-3 text-sm text-[hsl(var(--muted-foreground))] md:text-right'>
+            <span className='text-[hsl(var(--foreground))]'>What teams notice first:</span>
             <span>Structured briefs that cite every insight</span>
-            <span>Real-time tone coaching inside the editor</span>
-            <span>Playwright-powered preview checks before publish</span>
+            <span>Real-time tone coaching in the editor</span>
+            <span>Playwright checks before anything ships</span>
           </div>
         </div>
 
-        <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 auto-rows-fr'>
-          {landingPageContent.features.map((feature: any, index: number) => {
+        <div className='grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3'>
+          {landingPageContent.features.map((feature: any) => {
             const Icon = iconMap[feature.icon as keyof typeof iconMap];
-            const isLarge = feature.size === "large";
 
             return (
               <div
                 key={feature.title}
                 className={cn(
-                  "group relative overflow-hidden rounded-3xl border border-slate-200/70 dark:border-slate-800/50 bg-white/80 dark:bg-gray-950/70 backdrop-blur-xl p-7 md:p-8 shadow-[0_25px_80px_rgba(15,23,42,0.12)]",
-                  isLarge && "md:col-span-2"
+                  "flex min-h-[240px] flex-col justify-between rounded-3xl border border-[hsl(var(--border))] bg-white p-6 shadow-[0_14px_45px_rgba(15,15,15,0.08)] transition-transform duration-300 hover:-translate-y-1"
                 )}>
-                <div className='absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500'>
-                  <div
-                    className={cn(
-                      "absolute inset-0 bg-gradient-to-br",
-                      feature.gradient
-                    )}></div>
-                </div>
-                <div className='relative z-10 space-y-5'>
-                  <div className='inline-flex items-center justify-center w-12 h-12 rounded-xl bg-sky-500/15 text-sky-600 dark:text-sky-300 group-hover:scale-110 transition-transform duration-300'>
-                    <Icon className='w-6 h-6' />
+                <div className='space-y-4'>
+                  <div className='inline-flex h-12 w-12 items-center justify-center rounded-full border border-[hsl(var(--border))] text-[hsl(var(--foreground))]'>
+                    <Icon className='h-5 w-5' />
                   </div>
-
                   <div className='space-y-3'>
-                    <h3 className='text-xl md:text-2xl font-semibold text-gray-900 dark:text-white'>
+                    <h3 className='text-lg font-semibold text-[hsl(var(--foreground))]'>
                       {feature.title}
                     </h3>
-                    <p className='text-sm md:text-base text-gray-600 dark:text-gray-300 leading-relaxed'>
+                    <p className='text-sm leading-relaxed text-[hsl(var(--muted-foreground))]'>
                       {feature.description}
                     </p>
                   </div>
-
-                  <div className='pt-4'>
-                    <span className='inline-flex items-center text-sm font-medium text-sky-600 dark:text-sky-300'>
-                      Learn more
-                      <ArrowRight className='ml-1 h-4 w-4 transition-transform duration-300 group-hover:translate-x-1' />
-                    </span>
-                  </div>
                 </div>
+                <span className='mt-6 inline-flex items-center text-sm font-medium text-[hsl(var(--accent))]'>
+                  Learn more
+                  <ArrowRight className='ml-2 h-4 w-4' />
+                </span>
               </div>
             );
           })}

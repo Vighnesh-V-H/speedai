@@ -252,9 +252,32 @@ TOPIC: "%s"`, req.Topic)
 	
 }
 
-func (h *Handler) RecommendAgent(c *gin.Context) {
-	logger.Info("RecommendAgent handler called", zap.String("remote_addr", c.ClientIP()))
+func (h *Handler) RecommendAgent(c *gin.Context , message string) string {
 
-	
-	c.JSON(http.StatusNotImplemented, gin.H{"success": false, "error": "Not implemented yet"})
+		prompt := fmt.Sprintf(`You are a highly skilled research assistant. Your purpose is to provide a clear, neutral, and well-structured summary of the following topic.
+1. Start with a concise, one-sentence definition or overview of the topic.
+2. Follow with 3-5 key points presented as a bulleted list.
+3. Conclude with a brief statement on the topic's significance or real-world impact.
+Maintain a formal and objective tone. Do not use slang, personal opinions, or speculative language. Ensure the output is clean and easy to read.
+
+TOPIC: "%s"`, message)
+
+	ctx := c.Request.Context()
+
+	logger.Debug("Initializing Gemini client")
+	client, err := genai.NewClient(ctx, nil)
+	if err != nil {
+		logger.Error("Failed to initialize Gemini client",
+			zap.Error(err),
+			zap.Uint("error-code", 111))
+		c.JSON(http.StatusInternalServerError, gin.H{"success": false, "error": "Gemini client initialization failed", "error-code": 111})
+	}
+	text , err := client.Models.GenerateContent(ctx, "gemini-2.5-flash", genai.Text(prompt), nil)
+	if err!= nil{
+		logger.Error("Failed to generate retry again"  , zap.Uint8("error-code" , 129))
+	}
+
+	return text.Text()
+
+
 }
