@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"github.com/Vighnesh-V-H/speedai/internal/cache"
 	"github.com/Vighnesh-V-H/speedai/internal/db"
 	"github.com/Vighnesh-V-H/speedai/internal/kafka"
 	"github.com/Vighnesh-V-H/speedai/internal/logger"
@@ -26,9 +27,10 @@ type ResearchMessage struct {
 func NewConsumer(db *db.DB, topics []string) (*Consumer, error) {
 	logger.Info("Initializing Kafka consumer", zap.Strings("topics", topics))
 
-	client := kafka.Init()
+	
+	client := kafka.InitConsumer("speedai-research-consumers", topics)
 	if client == nil {
-		logger.Error("Failed to initialize Kafka client for consumer" , zap.Int("error-code" , 122))
+		logger.Error("Failed to initialize Kafka client for consumer", zap.Int("error-code", 122))
 		return nil, fmt.Errorf("failed to init kafka client")
 	}
 
@@ -42,9 +44,10 @@ func NewConsumer(db *db.DB, topics []string) (*Consumer, error) {
 func (c *Consumer) Run(ctx context.Context) {
 	logger.Info("Starting Kafka consumer loop", zap.Strings("topics", c.topics))
 
-
-	c.client.AddConsumeTopics(c.topics...)
-
+	defer func() {
+		logger.Info("Closing Kafka consumer client")
+		c.client.Close()
+	}()
 	
 	for {
 		select {
@@ -64,13 +67,13 @@ func (c *Consumer) Run(ctx context.Context) {
 				continue
 			}
 
-			
 			fetches.EachPartition(func(p kgo.FetchTopicPartition) {
 				for _, record := range p.Records {
-				
+					
+					
 					var msg ResearchMessage
 					if err := json.Unmarshal(record.Value, &msg); err != nil {
-						logger.Error("Failed to unmarshal Kafka message", zap.Error(err) , zap.Int("error-code" , 127))
+						logger.Error("Failed to unmarshal Kafka message", zap.Error(err), zap.Int("error-code", 127))
 						continue
 					}
 
@@ -79,12 +82,21 @@ func (c *Consumer) Run(ctx context.Context) {
 						zap.String("key", string(record.Key)),
 						zap.Any("value", msg),
 					)
-
-					// TODO: process msg (save to DB, forward to websocket)
+ 
+				
+					cache := cache.Cache()
+					cache.Set(record.Topic, msg.Chunk, 1<<15)
+					cache.Close()
 				}
 
-				
-				c.client.CommitRecords(ctx, p.Records...)
+				if err := c.client.CommitRecords(ctx, p.Records...); err != nil {
+					logger.Error("Failed to commit offsets", zap.Error(err), zap.Int("error-code", 129))
+				} else {
+					logger.Debug("Successfully committed offsets",
+						zap.String("topic", p.Topic),
+						zap.Int32("partition", p.Partition),
+						zap.Int("records", len(p.Records)))
+				}
 			})
 		}
 	}

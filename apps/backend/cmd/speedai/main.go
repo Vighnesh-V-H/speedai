@@ -1,8 +1,12 @@
 package main
 
 import (
+	"context"
 	"log"
 	"os"
+	"os/signal"
+	"syscall"
+	"time"
 
 	"github.com/Vighnesh-V-H/speedai/internal/agents"
 	"github.com/Vighnesh-V-H/speedai/internal/auth"
@@ -60,12 +64,29 @@ func main() {
     agentHandler := agents.NewHandler(agentService)
     logger.Info("Services initialized successfully")
 
-    // Setup authentication provider
+ 
+    logger.Info("Initializing Kafka consumer...")
+    topics := []string{"research-facts"} 
+    consumer, err := agents.NewConsumer(database, topics)
+    if err != nil {
+        logger.Fatal("Failed to initialize Kafka consumer", zap.Error(err))
+    }
+    
+
+    ctx, cancel := context.WithCancel(context.Background())
+    defer cancel()
+    
+    go func() {
+        logger.Info("Starting Kafka consumer goroutine")
+        consumer.Run(ctx)
+    }()
+    logger.Info("Kafka consumer started successfully")
+
+
     logger.Info("Setting up authentication providers...")
     auth.SetupGoth()
     logger.Info("Authentication providers configured")
 
-    // Initialize server
     srv := server.New(database)
     
     // Setup routes
@@ -79,8 +100,30 @@ func main() {
         port = "8080"
     }
     
-    logger.Info("Server starting", zap.String("port", port))
-    if err := srv.Start(":" + port); err != nil {
-        logger.Fatal("Server failed to start", zap.Error(err), zap.String("port", port))
+    sigChan := make(chan os.Signal, 1)
+    signal.Notify(sigChan, os.Interrupt, syscall.SIGTERM)
+    
+
+    go func() {
+        logger.Info("Server starting", zap.String("port", port))
+        if err := srv.Start(":" + port); err != nil {
+            logger.Fatal("Server failed to start", zap.Error(err), zap.String("port", port))
+        }
+    }()
+    
+    <-sigChan
+    logger.Info("Received shutdown signal, gracefully shutting down...")
+    
+
+    cancel()
+    
+    
+    shutdownCtx, shutdownCancel := context.WithTimeout(context.Background(), 10*time.Second)
+    defer shutdownCancel()
+    
+    if err := srv.Shutdown(shutdownCtx); err != nil {
+        logger.Error("Server shutdown failed", zap.Error(err))
     }
+    
+    logger.Info("Application shutdown complete")
 }

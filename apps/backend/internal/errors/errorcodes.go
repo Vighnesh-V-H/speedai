@@ -1,6 +1,6 @@
 package errors
 
-var ErrorCodes = map[int16]string{
+var ErrorCodes = map[uint8]string{
 
 	101: "auth user authentication failed",
 	102: "database transaction begin failed",
@@ -29,5 +29,7 @@ var ErrorCodes = map[int16]string{
 	125: "server shutdown failed",
 
 	126: "kafka consumer fetch failed while running",
-	127: "Consumer:message unmarshal failed",
+	127: "consumer message unmarshal failed",
+	128: "ristretto cache initialization failed",
+	129: "kafka consumer offset commit failed",
 }
