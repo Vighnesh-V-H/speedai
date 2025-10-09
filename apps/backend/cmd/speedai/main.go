@@ -89,7 +89,7 @@ func main() {
 
     srv := server.New(database)
     
-    // Setup routes
+   
     logger.Info("Setting up routes...")
     router.SetupAuthRoutes(srv.Router, authHandler)
     router.SetupAgentRoutes(srv.Router, agentHandler)

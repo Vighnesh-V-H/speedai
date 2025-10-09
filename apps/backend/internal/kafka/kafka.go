@@ -94,6 +94,7 @@ func InitConsumer(groupID string, topics []string) *kgo.Client {
 	defer cancel()
 
 	logger.Debug("Testing Kafka consumer connection...")
+	
 	if err := consumerClient.Ping(ctx); err != nil {
 		logger.Error("Failed to ping Kafka broker - consumer connection test failed",
 			zap.Error(err),

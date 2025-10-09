@@ -32,4 +32,5 @@ var ErrorCodes = map[uint8]string{
 	127: "consumer message unmarshal failed",
 	128: "ristretto cache initialization failed",
 	129: "kafka consumer offset commit failed",
+	131: "event sending failed",
 }

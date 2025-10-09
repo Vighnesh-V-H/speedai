@@ -52,7 +52,7 @@ TOPIC: "%s"`, req.Topic)
 	if err != nil {
 		logger.Error("Failed to initialize Gemini client",
 			zap.Error(err),
-			zap.String("error-code", "111"),
+			zap.Uint("error-code", 111),
 			zap.String("topic", req.Topic))
 		c.JSON(http.StatusInternalServerError, gin.H{"success": false, "error": "Gemini client initialization failed", "error-code": 111})
 		return
@@ -219,7 +219,7 @@ TOPIC: "%s"`, req.Topic)
 					zap.Error(event.err),
 					zap.String("topic", req.Topic),
 					zap.Int("events_sent", eventsSent))
-				c.SSEvent("error", gin.H{"message": event.err.Error()})
+				c.SSEvent("error", gin.H{"message": event.err.Error() , "error-code":132})
 				return false
 			}
 
@@ -249,6 +249,7 @@ TOPIC: "%s"`, req.Topic)
 			return false
 		}
 	})
+	
 }
 
 func (h *Handler) RecommendAgent(c *gin.Context) {
