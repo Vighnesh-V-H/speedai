@@ -20,12 +20,11 @@ import (
 )
 
 func main() {
-    // Ensure logs directory exists
+   
     if err := logger.EnsureLogDirectory(); err != nil {
         log.Fatal("Failed to create logs directory:", err)
     }
 
-    // Initialize logger
     environment := os.Getenv("ENVIRONMENT")
     if environment == "" {
         environment = "development"
@@ -40,14 +39,14 @@ func main() {
         zap.String("environment", environment),
         zap.String("version", "1.0.0"))
 
-    // Load environment variables
+
     if err := godotenv.Load(); err != nil {
         logger.Warn("No .env file found", zap.Error(err))
     } else {
         logger.Info("Environment variables loaded successfully")
     }
   
-    // Initialize database
+   
     databaseURL := os.Getenv("DATABASE_URL")
     logger.Info("Connecting to database...")
     database, err := db.New(databaseURL)
@@ -57,7 +56,6 @@ func main() {
     defer database.Close()
     logger.Info("Database connection established successfully")
 
-    // Initialize services
     logger.Info("Initializing services...")
     authService := auth.NewService(database)
     agentService := agents.NewService(database)
@@ -91,8 +89,6 @@ func main() {
 
     srv := server.New(database)
     
-   
-    logger.Info("Setting up routes...")
     router.SetupAuthRoutes(srv.Router, authHandler)
     router.SetupAgentRoutes(srv.Router, agentHandler)
     router.SetupWsRoutes(srv.Router, wsHandler)

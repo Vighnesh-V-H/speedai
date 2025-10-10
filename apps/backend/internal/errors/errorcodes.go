@@ -34,4 +34,7 @@ var ErrorCodes = map[uint8]string{
 	129: "kafka consumer offset commit failed",
 	131: "event sending failed",
 	132: "ai model content generation failed",
+
+	133: "webscoket upgrade failed",
+	134: "unexpected websocket close",
 }

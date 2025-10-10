@@ -6,8 +6,5 @@ import (
 )
 
 func SetupWsRoutes(router *gin.Engine, wsHandler *ws.Handler) {
-	apiGroup := router.Group("/api")
-	{
-		apiGroup.GET("/ws", wsHandler.Ws)
-	}
+	router.GET("/api/ws", wsHandler.Ws )
 }
