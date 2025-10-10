@@ -9,6 +9,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/Vighnesh-V-H/speedai/internal/cache"
 	"github.com/Vighnesh-V-H/speedai/internal/kafka"
 	"github.com/Vighnesh-V-H/speedai/internal/logger"
 	"github.com/gin-gonic/gin"
@@ -253,14 +254,25 @@ TOPIC: "%s"`, req.Topic)
 }
 
 func (h *Handler) RecommendAgent(c *gin.Context , message string) string {
+	cache := cache.Cache()
+	writingStyle , success:= cache.Get("")
 
-		prompt := fmt.Sprintf(`You are a highly skilled research assistant. Your purpose is to provide a clear, neutral, and well-structured summary of the following topic.
+	if !success{
+		return "false"
+	}
+
+prompt := fmt.Sprintf(`You are a highly writing assistant. Your purpose is to provide a clear, neutral, and well-structured summary of the following topic.
 1. Start with a concise, one-sentence definition or overview of the topic.
 2. Follow with 3-5 key points presented as a bulleted list.
 3. Conclude with a brief statement on the topic's significance or real-world impact.
 Maintain a formal and objective tone. Do not use slang, personal opinions, or speculative language. Ensure the output is clean and easy to read.
+if writing style is empty use a formal one
 
-TOPIC: "%s"`, message)
+WRITING STYLE: %s
+
+TOPIC: "%s"
+
+Based on this topic, the summary should `, writingStyle, message)
 
 	ctx := c.Request.Context()
 

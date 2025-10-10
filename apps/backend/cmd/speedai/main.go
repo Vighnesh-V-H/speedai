@@ -15,6 +15,7 @@ import (
 	"github.com/Vighnesh-V-H/speedai/internal/router"
 	"github.com/Vighnesh-V-H/speedai/internal/server"
 	ws "github.com/Vighnesh-V-H/speedai/internal/websocket"
+	"github.com/Vighnesh-V-H/speedai/internal/write"
 	"github.com/joho/godotenv"
 	"go.uber.org/zap"
 )
@@ -61,6 +62,8 @@ func main() {
     agentService := agents.NewService(database)
     authHandler := auth.NewHandler(authService)
     agentHandler := agents.NewHandler(agentService)
+    writeService := write.NewService(database)
+    writeHandler := write.NewHandler(writeService)
     wsHandler := ws.NewHandler(database)
     logger.Info("Services initialized successfully")
 
@@ -91,6 +94,7 @@ func main() {
     
     router.SetupAuthRoutes(srv.Router, authHandler)
     router.SetupAgentRoutes(srv.Router, agentHandler)
+    router.SetupWritingRoutes(srv.Router, writeHandler)
     router.SetupWsRoutes(srv.Router, wsHandler)
     logger.Info("Routes configured successfully")
 
