@@ -3,6 +3,7 @@ package ws
 import (
 	"net/http"
 
+	"github.com/Vighnesh-V-H/speedai/internal/agents"
 	"github.com/Vighnesh-V-H/speedai/internal/db"
 	"github.com/Vighnesh-V-H/speedai/internal/logger"
 	"github.com/gin-gonic/gin"
@@ -53,9 +54,13 @@ func (h *Handler) Ws(c *gin.Context) {
 			break
 		}
 
-		logger.Info("WebSocket message received", zap.ByteString("message", message))
+		text:=	agents.RecommendAgent(c , string(message))
 
-		if err := conn.WriteMessage(messageType, message); err != nil {
+
+		logger.Info("WebSocket message received", zap.ByteString("message", message))
+		logger.Info("WebSocket message received", zap.ByteString("message", []byte(text)))
+
+		if err := conn.WriteMessage(messageType, []byte(text)); err != nil {
 			logger.Error("Failed to echo message", zap.Error(err))
 			break
 		}

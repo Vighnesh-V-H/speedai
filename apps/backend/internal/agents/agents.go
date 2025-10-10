@@ -253,43 +253,39 @@ TOPIC: "%s"`, req.Topic)
 	
 }
 
-func (h *Handler) RecommendAgent(c *gin.Context , message string) string {
+func RecommendAgent(c *gin.Context, message string) string {
 	cache := cache.Cache()
-	writingStyle , success:= cache.Get("")
+	writingStyle, success := cache.Get("writing_style:")
 
-	if !success{
-		return "false"
+	if !success || writingStyle == "" {
+		writingStyle = "neutral"
 	}
 
-prompt := fmt.Sprintf(`You are a highly writing assistant. Your purpose is to provide a clear, neutral, and well-structured summary of the following topic.
-1. Start with a concise, one-sentence definition or overview of the topic.
-2. Follow with 3-5 key points presented as a bulleted list.
-3. Conclude with a brief statement on the topic's significance or real-world impact.
-Maintain a formal and objective tone. Do not use slang, personal opinions, or speculative language. Ensure the output is clean and easy to read.
-if writing style is empty use a formal one
+	ctx := c.Request.Context()
+	client, err := GetGenAIClient(ctx)
+	if err != nil {
+		logger.Error("Failed to initialize Gemini client", zap.Error(err))
+		return "Error initializing AI client"
+	}
+
+	
+	prompt := fmt.Sprintf(`
+You are an intelligent autocomplete assistant.
+Your goal is to suggest short continuations (1 to 5 words max) 
+based on the user's current text and the given writing style.
 
 WRITING STYLE: %s
 
-TOPIC: "%s"
+USER TEXT: "%s"
 
-Based on this topic, the summary should `, writingStyle, message)
+Return ONLY the suggested continuation — no explanations, no punctuation unless needed.
+`, writingStyle, message)
 
-	ctx := c.Request.Context()
-
-	logger.Debug("Initializing Gemini client")
-	client, err := genai.NewClient(ctx, nil)
+	resp, err := client.Models.GenerateContent(ctx, "gemini-2.5-flash", genai.Text(prompt), nil)
 	if err != nil {
-		logger.Error("Failed to initialize Gemini client",
-			zap.Error(err),
-			zap.Uint("error-code", 111))
-		c.JSON(http.StatusInternalServerError, gin.H{"success": false, "error": "Gemini client initialization failed", "error-code": 111})
-	}
-	text , err := client.Models.GenerateContent(ctx, "gemini-2.5-flash", genai.Text(prompt), nil)
-	if err!= nil{
-		logger.Error("Failed to generate retry again"  , zap.Uint8("error-code" , 129))
+		logger.Error("Failed to generate completion", zap.Error(err))
+		return ""
 	}
 
-	return text.Text()
-
-
+	return resp.Text()
 }
